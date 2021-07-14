@@ -23,9 +23,7 @@
 export default {
   name: 'TodoListInput',
   props: {
-    unCheckedNumber: Number,
-    totalNumber: Number,
-    isItemChecked: Array
+    items: Array
   },
   data: function () {
     return {
@@ -38,17 +36,19 @@ export default {
   },
   computed: {
     isAllChecked: function () {
-      return !this.unCheckedNumber
+      return this.items.every(function (item) {
+        return item.isChecked
+      })
     },
     isBtnShow: function () {
-      return !!this.totalNumber
+      return !!this.items.length
     }
   },
   methods: {
     checkAll: function () {
       const isAllChecked = this.isAllChecked
       const _this = this
-      this.isItemChecked.forEach(function (item, index) {
+      this.items.forEach(function (item, index) {
         _this.$emit('changeItemStatus', index, !isAllChecked)
       })
     },

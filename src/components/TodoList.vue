@@ -1,19 +1,17 @@
 <template>
   <div class="todo-list" :class="shadow">
     <todo-list-input
-      :unCheckedNumber="unCheckedNumber"
-      :totalNumber="totalNumber"
-      :isItemChecked="isItemChecked"
+      :items="items"
       @addNewItem="addNewItem"
       @changeItemStatus="changeItemStatus"
     ></todo-list-input>
     <div class="todo-list-items">
       <todo-list-item
-        v-for="key in itemList"
-        :key="key.dataId"
-        :itemIndex="key.index"
-        :itemContent="String(key.data)"
-        :itemStatus="key.isChecked"
+        v-for="item in itemsShown"
+        :key="item.key"
+        :itemIndex="item.index"
+        :itemContent="String(item.content)"
+        :itemStatus="item.isChecked"
         @delete="deleteItem"
         @changeItemContent="changeItemContent"
         @changeItemStatus="changeItemStatus"
@@ -22,11 +20,8 @@
     </div>
 
     <todo-list-status-bar
-      :unCheckedNumber="unCheckedNumber"
-      :checkedNumber="checkedNumber"
-      :totalNumber="totalNumber"
-      :isItemChecked="isItemChecked"
-      @delete="deleteItem"
+      :items="items"
+      @clearCompletedItems="clearCompletedItems"
       @selectedChange="selectedChange"
     ></todo-list-status-bar>
   </div>
@@ -46,115 +41,72 @@ export default {
   },
   data: function () {
     return {
-      itemContents: [],
-      isItemChecked: [],
+      items: [],
       selected: 'All'
     }
   },
   computed: {
     shadow: function () {
-      return !this.isItemChecked.length ? 'shadow-dark' : 'shadow-light'
+      return !this.items.length ? 'shadow-dark' : 'shadow-light'
     },
-    unCheckedNumber: function () {
-      return this.isItemChecked.filter(function (item) {
-        return !item
-      }).length
-    },
-    checkedNumber: function () {
-      return this.isItemChecked.filter(function (item) {
-        return item
-      }).length
-    },
-    totalNumber: function () {
-      return this.isItemChecked.length
-    },
-    itemList: function () {
-      const list = {}
-      const _this = this
-      switch (this.selected) {
-        case 'All':
-          this.itemContents.forEach(function (element, index) {
-            const isChecked = _this.isItemChecked[index]
-            list[index] = {
-              data: element,
-              isChecked,
-              index,
-              dataId: isChecked + index + element
+    itemsShown: function () {
+      const selected = this.selected
+
+      return this.items
+        .map(function (item, index) {
+          const isChecked = item.isChecked
+          const content = item.content
+          return {
+            content,
+            isChecked,
+            index,
+            key: `${isChecked}-${index}-${content}`,
+            selectedCondition: {
+              All: true,
+              Active: !isChecked,
+              Completed: isChecked
             }
-          })
-          break
-        case 'Active':
-          this.itemContents.forEach(function (element, index) {
-            const isChecked = _this.isItemChecked[index]
-            if (!isChecked) {
-              list[index] = {
-                data: element,
-                isChecked,
-                index,
-                dataId: isChecked + index + element
-              }
-            }
-          })
-          break
-        case 'Completed':
-          this.itemContents.forEach(function (element, index) {
-            const isChecked = _this.isItemChecked[index]
-            if (isChecked) {
-              list[index] = {
-                data: element,
-                isChecked,
-                index,
-                dataId: isChecked + index + element
-              }
-            }
-          })
-          break
-      }
-      return list
+          }
+        })
+        .filter(function (item) {
+          return item.selectedCondition[selected]
+        })
     }
   },
   methods: {
     addNewItem: function (message) {
-      this.itemContents.push(message)
-      this.isItemChecked.push(false)
+      this.items.push({
+        content: message,
+        isChecked: false
+      })
     },
     deleteItem: function (index) {
-      this.itemContents.splice(index, 1)
-      this.isItemChecked.splice(index, 1)
+      this.items.splice(index, 1)
     },
     changeItemContent: function (index, content) {
-      if (content) this.itemContents.splice(index, 1, content)
-      else {
-        this.itemContents.splice(index, 1)
-        this.isItemChecked.splice(index, 1)
-      }
+      if (content) this.items[index].content = content
+      else this.items.splice(index, 1)
     },
     changeItemStatus: function (index, status) {
-      this.isItemChecked.splice(index, 1, status)
+      this.items[index].isChecked = status
     },
     selectedChange: function (selected) {
       this.selected = selected
+    },
+    clearCompletedItems: function () {
+      this.items = this.items.filter(function (item) {
+        return !item.isChecked
+      })
     }
   },
   created: function () {
-    const itemContents = JSON.parse(localStorage.getItem('itemContents'))
-    const isItemChecked = JSON.parse(localStorage.getItem('isItemChecked'))
-    const _this = this
-
-    isItemChecked.forEach(function (item) {
-      _this.isItemChecked.push(item)
-    })
-    itemContents.forEach(function (item) {
-      _this.itemContents.push(item)
-    })
+    this.items = JSON.parse(localStorage.getItem('items')) || []
   },
   mounted() {
-    const itemContents = this.itemContents
-    const isItemChecked = this.isItemChecked
+    const items = this.items
 
     window.onbeforeunload = function () {
-      localStorage.setItem('itemContents', JSON.stringify(itemContents))
-      localStorage.setItem('isItemChecked', JSON.stringify(isItemChecked))
+      localStorage.setItem('items', JSON.stringify(items))
     }
   }
 }

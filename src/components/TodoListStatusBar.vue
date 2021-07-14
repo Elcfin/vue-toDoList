@@ -1,23 +1,20 @@
 <template>
-  <div class="status-bar">
+  <div class="status-bar" v-show="items.length">
     <div class="number">
       {{ unCheckedNumber + ' item(s) left' }}
     </div>
+
     <div class="btns">
       <div
-        v-for="(item, index) in btns"
+        v-for="item in btns"
         :key="item"
         :class="{ selected: item === selected }"
       >
-        <input
-          type="radio"
-          :id="`${index}select`"
-          :value="item"
-          v-model="selected"
-        />
-        <label :for="`${index}select`"> {{ item }}</label>
+        <input type="radio" :id="item" :value="item" v-model="selected" />
+        <label :for="item"> {{ item }}</label>
       </div>
     </div>
+
     <div
       class="clear"
       @click="clearCompletedItems"
@@ -32,10 +29,7 @@
 export default {
   name: 'TodoListStatusBar',
   props: {
-    unCheckedNumber: Number,
-    checkedNumber: Number,
-    totalNumber: Number,
-    isItemChecked: Array
+    items: Array
   },
   data: function () {
     return {
@@ -46,19 +40,25 @@ export default {
   },
   computed: {
     isClearShow: function () {
-      return this.checkedNumber ? 'visible' : 'hidden'
+      return this.items.some(function (item) {
+        return item.isChecked
+      })
+        ? 'visible'
+        : 'hidden'
+    },
+    unCheckedNumber: function () {
+      return this.items.filter(function (item) {
+        return !item.isChecked
+      }).length
     }
   },
   methods: {
     clearCompletedItems() {
-      for (let i = this.totalNumber - 1; i >= 0; i--)
-        if (this.isItemChecked[i]) {
-          this.$emit('delete', i)
-        }
+      this.$emit('clearCompletedItems')
     }
   },
   watch: {
-    selected: function () {
+    selected() {
       this.$emit('selectedChange', this.selected)
     }
   }
