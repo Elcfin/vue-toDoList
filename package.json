@@ -8,9 +8,14 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "axios": "^0.21.1",
     "core-js": "^3.6.5",
-    "less": "^3.9.0",
-    "less-loader": "^4.1.0",
+    "koa": "^2.13.1",
+    "koa-compose": "^4.1.0",
+    "koa-cors": "^0.0.16",
+    "koa-router": "^10.0.0",
+    "koa-bodyparser": "^4.3.0",
+    "mongodb": "^4.0.0",
     "vue": "^3.0.0"
   },
   "devDependencies": {
@@ -22,7 +27,9 @@
     "eslint": "^6.7.2",
     "eslint-plugin-vue": "^7.0.0",
     "style-resources-loader": "^1.4.1",
-    "vue-cli-plugin-style-resources-loader": "^0.1.5"
+    "vue-cli-plugin-style-resources-loader": "^0.1.5",
+    "less": "^3.9.0",
+    "less-loader": "^4.1.0"
   },
   "eslintConfig": {
     "root": true,

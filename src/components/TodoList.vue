@@ -31,6 +31,12 @@
 import TodoListItem from './TodoListItem.vue'
 import TodoListStatusBar from './TodoListStatusBar.vue'
 import TodoListInput from './TodoListInput.vue'
+import {
+  addNewItem as apiAddNewItem,
+  deleteItem as apiDeleteItem,
+  updateItem as apiUpdateItem,
+  getItems as apiGetItems
+} from '../api/index.js'
 
 export default {
   name: 'TodoList',
@@ -75,39 +81,78 @@ export default {
   },
   methods: {
     addNewItem: function (message) {
-      this.items.push({
+      const data = {
         content: message,
-        isChecked: false
-      })
+        isChecked: false,
+        timestamp: Date.now()
+      }
+      this.items.push(data)
+      apiAddNewItem(data)
     },
     deleteItem: function (index) {
+      const data = {
+        content: this.items[index].content,
+        isChecked: this.items[index].isChecked,
+        timestamp: this.items[index].timestamp
+      }
       this.items.splice(index, 1)
+      apiDeleteItem(data)
     },
     changeItemContent: function (index, content) {
-      if (content) this.items[index].content = content
-      else this.items.splice(index, 1)
+      if (content) {
+        const findCondition = {
+          content: this.items[index].content,
+          isChecked: this.items[index].isChecked,
+          timestamp: this.items[index].timestamp
+        }
+        const newContent = { isChecked: status }
+        this.items[index].content = content
+        apiUpdateItem(findCondition, newContent)
+      } else {
+        const data = {
+          content: this.items[index].content,
+          isChecked: this.items[index].isChecked,
+          timestamp: this.items[index].timestamp
+        }
+        this.items.splice(index, 1)
+        apiDeleteItem(data)
+      }
     },
     changeItemStatus: function (index, status) {
+      const findCondition = {
+        content: this.items[index].content,
+        isChecked: this.items[index].isChecked,
+        timestamp: this.items[index].timestamp
+      }
+      const newContent = { isChecked: status }
       this.items[index].isChecked = status
+      apiUpdateItem(findCondition, newContent)
     },
     selectedChange: function (selected) {
       this.selected = selected
     },
     clearCompletedItems: function () {
-      this.items = this.items.filter(function (item) {
+      this.items = this.items.filter(function (item, index, arr) {
+        const data = {
+          content: arr[index].content,
+          isChecked: arr[index].isChecked,
+          timestamp: arr[index].timestamp
+        }
+        apiDeleteItem(data)
         return !item.isChecked
       })
     }
   },
-  created: function () {
-    this.items = JSON.parse(localStorage.getItem('items')) || []
+  created: async function () {
+    const result = await apiGetItems()
+    this.items = result.data
+    /* this.items = JSON.parse(localStorage.getItem('items')) || [] */
   },
   mounted() {
-    const items = this.items
-
+    /* const items = this.items
     window.onbeforeunload = function () {
       localStorage.setItem('items', JSON.stringify(items))
-    }
+    } */
   }
 }
 </script>
